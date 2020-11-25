@@ -31,5 +31,5 @@ class Paddle(pygame.sprite.Sprite):
     def moveDown(self, pixels):
         self.rect.y += pixels
         # Check that you are not going too far (off the screen)
-        if self.rect.y > 80:
-            self.rect.y = 80
+        if self.rect.y > 180:
+            self.rect.y = 180
