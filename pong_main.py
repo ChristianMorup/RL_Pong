@@ -42,32 +42,8 @@ for reward_type in reward_types:
             screen = pygame.display.set_mode(size)
             pygame.display.set_caption("Pong")
 
-            paddleA = Paddle(WHITE, paddle_width, paddle_height)
-            paddleA.rect.x = 0
-            paddleA.rect.y = 0
-
-            paddleB = Paddle(WHITE, paddle_width, paddle_height)
-            paddleB.rect.x = x  # x-paddle_width
-            paddleB.rect.y = 20
-
-            ball = Ball(WHITE, ball_dim, ball_dim)
-            ball.rect.x = 35
-            ball.rect.y = 20
-
-            # This will be a list that will contain all the sprites we intend to use in our game.
-            all_sprites_list = pygame.sprite.Group()
-
-            # Add the car to the list of objects
-            all_sprites_list.add(paddleA)
-            # all_sprites_list.add(paddleB)
-            all_sprites_list.add(ball)
-
-            # The clock will be used to control how fast the screen updates
-            clock = pygame.time.Clock()
-
             nA = 3  # Up, Down, Do-nothing
             Q = defaultdict(lambda: np.zeros(nA))
-            state = ((ball.rect.x, ball.rect.y), (ball.rect.x, ball.rect.y), paddleA.rect.x, paddleA.rect.y)
 
             cum_score = []
             cum_reward = []
@@ -84,7 +60,6 @@ for reward_type in reward_types:
                 wall_hits = 0
                 new_dist = 0
                 done = False
-                action = sarsa.epsilon_greedy(Q, state, nA, eps)
 
                 pygame.init()
                 screen = pygame.display.set_mode(size)
@@ -101,6 +76,9 @@ for reward_type in reward_types:
                 ball = Ball(WHITE, ball_dim, ball_dim)
                 ball.rect.x = 35
                 ball.rect.y = 20
+
+                state = ((ball.rect.x, ball.rect.y), (ball.rect.x, ball.rect.y), paddleA.rect.y)
+                action = sarsa.epsilon_greedy(Q, state, nA, eps)
 
                 # This will be a list that will contain all the sprites we intend to use in our game.
                 all_sprites_list = pygame.sprite.Group()
@@ -196,8 +174,7 @@ for reward_type in reward_types:
 
                     if not done:
                         # Choose action A_{t+1} using policy derived from Q (e.g., eps-greedy)
-                        next_state = (
-                        (ball.rect.x, ball.rect.y), (state[1][0], state[1][1]), paddleA.rect.x, paddleA.rect.y)
+                        next_state = ((ball.rect.x, ball.rect.y), (state[1][0], state[1][1]), paddleA.rect.y)
                         next_action = sarsa.epsilon_greedy(Q, next_state, nA, eps)
                         # Update Q
                         Q[state][action] = sarsa.update_Q_sarsa(0.5, 0.1, Q, state, action,

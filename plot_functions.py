@@ -12,8 +12,10 @@ apply_filters = True
 ## Number of missed balls
 ## Invert the scores
 
-reward_types = all_rewards
-modes = all_modes
+#reward_types = all_rewards
+#modes = all_modes
+modes = [Mode.BOTH]
+reward_types = [RewardType.TRACKING_PROPORTIONAL_UNIDIRECTIONAL, RewardType.TRACKING_PROPORTIONAL_UNIDIRECTIONAL_WEIGHTED]
 
 def moving_average(a, n=3):
     ret = np.cumsum(a, dtype=float)
@@ -120,7 +122,7 @@ def filter(score_sum, reward_sum):
     return score_sum, score_episodes, reward_sum, reward_episodes
 
 
-def plot_simulations(n_simulations=10):
+def plot_simulations(folder_path, n_modes=3, n_simulations=10):
     for reward_type in reward_types:
         scores = []
         rewards = []
@@ -129,7 +131,7 @@ def plot_simulations(n_simulations=10):
         episodes = []
 
         for mode in modes:
-            file_util = FileUtil('sim_data/test/')
+            file_util = FileUtil(folder_path)
             s_data, r_data, r_pos_data, r_neg_data = file_util.read_files(reward_type, mode)
 
             s_sum, episodes, r_sum, r_episodes = summarize_simulations(s_data, r_data, n_simulations=n_simulations)
@@ -144,24 +146,27 @@ def plot_simulations(n_simulations=10):
                 r_neg_sum, neg_episodes = summarize_reward_simulations(r_neg_data, n_simulations=n_simulations)
                 neg_rewards = np.append(neg_rewards, r_neg_sum)
 
-        shape = (3, len(episodes))
-        scores = scores.reshape(shape)
-        rewards = rewards.reshape(shape)
+        if n_modes > 0:
+            shape = (n_modes, len(episodes))
+            scores = scores.reshape(shape)
+            rewards = rewards.reshape(shape)
 
-        if len(pos_rewards) > 0:
-            shape = (2, len(episodes))
-            pos_rewards = pos_rewards.reshape(shape)
-        if len(neg_rewards) > 0:
-            shape = (2, len(episodes))
-            neg_rewards = neg_rewards.reshape(shape)
+            if len(pos_rewards) > 0:
+                shape = (n_modes-1, len(episodes))
+                pos_rewards = pos_rewards.reshape(shape)
+            if len(neg_rewards) > 0:
+                shape = (n_modes-1, len(episodes))
+                neg_rewards = neg_rewards.reshape(shape)
 
-        reward_title, score_title = map_reward_type_to_title(reward_type, mode)  # create_title(reward_type, mode)
+        reward_title, score_title = map_reward_type_to_title(reward_type)  # create_title(reward_type, mode)
 
         plt.clf()
         # plt.plot(episodes, scores, label="Both")
         plt.plot(episodes, scores[0], label="Both")
-        plt.plot(episodes, scores[1], label="Negative")
-        plt.plot(episodes, scores[2], label="Positive")
+        if n_modes >= 2:
+            plt.plot(episodes, scores[1], label="Negative")
+        if n_modes >= 3:
+            plt.plot(episodes, scores[2], label="Positive")
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, fancybox=True, shadow=False)
         plt.xlim(xmin=0, xmax=1000)
         plt.ylim(ymin=0, ymax=100)
@@ -172,9 +177,11 @@ def plot_simulations(n_simulations=10):
 
         plt.clf()
         # plt.plot(episodes, rewards, label="Both")
-        plt.plot(episodes, rewards[0].flatten(), label="Both")
-        plt.plot(episodes, rewards[1].flatten(), label="Negative")
-        plt.plot(episodes, rewards[2].flatten(), label="Positive")
+        plt.plot(episodes, rewards[0], label="Both")
+        if n_modes >= 2:
+            plt.plot(episodes, rewards[1], label="Negative")
+        if n_modes >= 3:
+            plt.plot(episodes, rewards[2], label="Positive")
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, fancybox=True, shadow=False)
         plt.xlim(xmin=0, xmax=1000)
         plt.ylabel('Cumulative reward')
@@ -185,8 +192,10 @@ def plot_simulations(n_simulations=10):
         if len(pos_rewards) > 0:
             plt.clf()
             # plt.plot(episodes, rewards, label="Both")
-            plt.plot(episodes, pos_rewards[0].flatten(), label="Both")
-            plt.plot(episodes, pos_rewards[1].flatten(), label="Positive")
+            if n_modes - 1 >= 1:
+                plt.plot(episodes, pos_rewards[0], label="Both")
+            if n_modes - 1 >= 2:
+                plt.plot(episodes, pos_rewards[1], label="Positive")
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, fancybox=True, shadow=False)
             plt.xlim(xmin=0, xmax=1000)
             plt.ylabel('Cumulative positive reward')
@@ -197,8 +206,10 @@ def plot_simulations(n_simulations=10):
         if len(neg_rewards) > 0:
             plt.clf()
             # plt.plot(episodes, rewards, label="Both")
-            plt.plot(episodes, neg_rewards[0].flatten(), label="Both")
-            plt.plot(episodes, neg_rewards[1].flatten(), label="Negative")
+            if n_modes - 1 >= 1:
+                plt.plot(episodes, neg_rewards[0], label="Both")
+            if n_modes - 1 >= 2:
+                plt.plot(episodes, neg_rewards[1].flatten(), label="Negative")
             plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, fancybox=True, shadow=False)
             plt.xlim(xmin=0, xmax=1000)
             plt.ylabel('Cumulative negative reward')
@@ -219,4 +230,4 @@ def do_simple_plot(score):
     plt.show()
 
 
-plot_simulations()
+plot_simulations('sim_data/test/', n_modes=1, n_simulations=5)
