@@ -9,18 +9,19 @@ from time import time
 from modes_and_types import *
 from file_util import FileUtil
 
-reward_types = all_rewards
+# reward_types = all_rewards
+reward_types = [RewardType.TRACKING]
 modes = all_modes
 
-n_simulations = 1
+n_simulations = 10
 frames_per_second = 20000
-num_episodes = 10
-episode_length = 10
+num_episodes = 1000
+episode_length = 100
 slow_down_on_last_100 = False
 
 for reward_type in reward_types:
     for mode in modes:
-        file_util = FileUtil('sim_data/test/')
+        file_util = FileUtil('sim_data/rev3/')
 
         for i_simulation in range(1, n_simulations + 1):
             sim_start = time()
@@ -33,7 +34,7 @@ for reward_type in reward_types:
 
             # Open a new window
             x = 140
-            y = 200
+            y = 150
             paddle_width = 5
             paddle_height = 20
             ball_dim = 5
@@ -142,16 +143,14 @@ for reward_type in reward_types:
                     new_dist = abs((paddleA.rect.y + paddle_width // 2) - ball.rect.y)
 
                     paddleA_hit = pygame.sprite.collide_mask(ball, paddleA)
-                    paddleB_hit = pygame.sprite.collide_mask(ball, paddleB)
+                    # paddleB_hit = pygame.sprite.collide_mask(ball, paddleB)
                     wall_hit = ball.rect.x < 0
                     # Detect collisions between the ball and the paddles
                     if paddleA_hit:
                         ball.bounce()
                         tries += 1
-                    if paddleB_hit:
-                        ball.bounce()
 
-                    if not (paddleA_hit or paddleB_hit):
+                    if not paddleA_hit:
                         # Check if the ball is bouncing against any of the 4 walls:
                         if ball.rect.x > x - ball_dim:
                             ball.velocity[0] = -ball.velocity[0]
