@@ -8,6 +8,7 @@ from paddle import Paddle
 from time import time
 from modes_and_types import *
 from file_util import FileUtil
+from state_serializer import serialize_state, deserialize_state, save_Q_value, load_Q_value
 
 # reward_types = all_rewards
 reward_types = [RewardType.TRACKING]
@@ -15,7 +16,7 @@ modes = all_modes
 
 n_simulations = 10
 frames_per_second = 20000
-num_episodes = 1000
+num_episodes = 50
 episode_length = 100
 slow_down_on_last_100 = False
 
@@ -43,7 +44,8 @@ for reward_type in reward_types:
             pygame.display.set_caption("Pong")
 
             nA = 3  # Up, Down, Do-nothing
-            Q = defaultdict(lambda: np.zeros(nA))
+            Q = load_Q_value()
+            print("loaded q values")
 
             cum_score = []
             cum_reward = []
@@ -78,6 +80,8 @@ for reward_type in reward_types:
                 ball.rect.y = 20
 
                 state = ((ball.rect.x, ball.rect.y), (ball.rect.x, ball.rect.y), paddleA.rect.y)
+                xxxx = serialize_state(state)
+                deserialize_state(xxxx)
                 action = sarsa.epsilon_greedy(Q, state, nA, eps)
 
                 # This will be a list that will contain all the sprites we intend to use in our game.
@@ -185,6 +189,7 @@ for reward_type in reward_types:
                     if done:
                         Q[state][action] = sarsa.update_Q_sarsa(0.5, 0.1, Q,
                                                                 state, action, reward)
+                        save_Q_value(Q)
                         cum_reward.append(reward_sum)
                         cum_score.append(wall_hits)
                         cum_neg_reward.append(reward_neg_sum)
